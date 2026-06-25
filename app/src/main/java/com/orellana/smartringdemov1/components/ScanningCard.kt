@@ -2,42 +2,53 @@ package com.orellana.smartringdemov1.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 
 @Composable
-fun NoDeviceRegisteredCard( onClick: () -> Unit) {
+fun ScanningCard() {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
+
+        CircularProgressIndicator(
+            modifier = Modifier
+                .fillMaxWidth(0.5f)
+                .aspectRatio(1f),
+            color = MaterialTheme.colorScheme.secondary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         Text(
-            text = "You have not registered a device with this app yet",
+            text = "Scanning...",
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Light
         )
-
-        OutlinedButton (onClick = onClick) {
-            Text(
-                text = "Start Scanning"
-            )
-        }
     }
 
 }
 
 
-@Preview (showBackground = true)
+
+@Preview(showBackground = true)
 @Composable
-fun NoDeviceRegisteredCardPreview() {
-    NoDeviceRegisteredCard{}
+fun ScanningCardPreview() {
+    ScanningCard()
 }

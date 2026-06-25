@@ -6,8 +6,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -19,6 +24,7 @@ import com.orellana.smartringdemov1.screens.LedTestScreen
 import com.orellana.smartringdemov1.screens.ScreenDestinations
 import com.orellana.smartringdemov1.screens.SensorTestScreen
 import com.orellana.smartringdemov1.ui.theme.SmartRingDemoV1Theme
+import com.orellana.smartringdemov1.viewmodels.HomeViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +44,8 @@ fun MainContainer() {
 
     val navController = rememberNavController()
     val currentDestination = navController.currentBackStackEntryAsState().value
+
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val currentRoute = currentDestination?.destination?.route ?: ScreenDestinations.Home.name
 
@@ -59,7 +67,8 @@ fun MainContainer() {
                 )
             }
         },
-        bottomBar = { DemoBottomBar(currentRoute) { destination -> navController.navigate(destination) } }
+        bottomBar = { DemoBottomBar(currentRoute) { destination -> navController.navigate(destination) } },
+        snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -67,7 +76,12 @@ fun MainContainer() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(route = ScreenDestinations.Home.name) {
-                HomeScreen()
+                val viewModel: HomeViewModel = viewModel()
+                HomeScreen(
+                    startScanning = viewModel::startScanning,
+                    snackBarHostState = snackBarHostState,
+                    homeState = viewModel.state.collectAsState().value
+                )
             }
 
             composable(route = ScreenDestinations.Led.name) {

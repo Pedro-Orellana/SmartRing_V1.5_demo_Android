@@ -1,6 +1,11 @@
 package com.orellana.smartringdemov1.screens
 
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,17 +13,66 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.orellana.smartringdemov1.bluetooth.SmartRingDevice
+import com.orellana.smartringdemov1.components.FoundDeviceCard
 import com.orellana.smartringdemov1.components.NoDeviceRegisteredCard
+import com.orellana.smartringdemov1.components.ScanningCard
+import com.orellana.smartringdemov1.viewmodels.HomeState
+import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    snackBarHostState: SnackbarHostState,
+    homeState: HomeState,
+    startScanning: () -> Unit,
+
+    ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val isScanGranted = results[Manifest.permission.BLUETOOTH_SCAN] ?: false
+        val isConnectGranted = results[Manifest.permission.BLUETOOTH_CONNECT] ?: false
+
+        if (isConnectGranted && isScanGranted) {
+            //start scanning here
+            startScanning()
+        } else {
+            scope.launch {
+                val snackBarResult = snackBarHostState.showSnackbar(
+                    message = "Necessary permissions not granted",
+                    actionLabel = "Go to Settings",
+                    duration = SnackbarDuration.Short
+                )
+
+                when (snackBarResult) {
+                    SnackbarResult.ActionPerformed -> {/*go to settings*/
+                    }
+
+                    SnackbarResult.Dismissed -> {}
+                }
+            }
+
+        }
+    }
+
+
+
     Column(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
@@ -53,7 +107,37 @@ fun HomeScreen() {
             modifier = Modifier.fillMaxSize()
         ) {
 
-            NoDeviceRegisteredCard()
+            AnimatedContent(
+                targetState = homeState.scanState
+            ) { scanState ->
+                when (scanState) {
+                    HomeState.ScanState.SCAN_STATE_IDLE -> {
+                        NoDeviceRegisteredCard {
+                            if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                                bluetoothPermissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.BLUETOOTH_SCAN,
+                                        Manifest.permission.BLUETOOTH_CONNECT
+                                    )
+                                )
+                            } else {
+                                startScanning()
+                            }
+                        }
+                    }
+
+                    HomeState.ScanState.SCAN_STATE_SCANNING -> {
+                        ScanningCard()
+                    }
+
+                    HomeState.ScanState.SCAN_STATE_FOUND -> {
+                        homeState.newDevice?.let {
+                            FoundDeviceCard(it, homeState.isConnected)
+                        }
+                    }
+                }
+            }
+
 
         }
 
@@ -65,5 +149,8 @@ fun HomeScreen() {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen()
+    val snackBarState = remember { SnackbarHostState() }
+    val ringDevice = SmartRingDevice(name = "Demo device", "AA:BB:CC:DD:EE:FF", false)
+    val homeState = HomeState(scanState = HomeState.ScanState.SCAN_STATE_FOUND, newDevice = ringDevice)
+    HomeScreen(snackBarState, homeState) {}
 }
