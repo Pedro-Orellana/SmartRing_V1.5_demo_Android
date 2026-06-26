@@ -3,11 +3,12 @@ package com.orellana.smartringdemov1.bluetooth
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import com.orellana.smartringdemov1.viewmodels.HomeState
+import kotlinx.coroutines.Job
 
 class DemoScanCallback(
     val updateRingDevice: (SmartRingDevice) -> Unit,
     val updateScanState: (HomeState.ScanState) -> Unit,
-    val stopScanWork: () -> Unit
+    val cancelScanJob: () -> Unit
 ) : ScanCallback() {
 
     @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
@@ -19,7 +20,8 @@ class DemoScanCallback(
             val ring = SmartRingDevice(name, address)
             updateRingDevice(ring)
             updateScanState(HomeState.ScanState.SCAN_STATE_FOUND)
-            stopScanWork()
+            cancelScanJob()
         }
     }
+
 }

@@ -27,6 +27,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.milliseconds
@@ -37,14 +38,20 @@ class HomeViewModel(val app: Application): AndroidViewModel(application = app) {
     val bluetoothManager: BluetoothManager = app.getSystemService(BluetoothManager::class.java)
     val bluetoothScanner: BluetoothLeScanner = bluetoothManager.adapter.bluetoothLeScanner
 
-    val repository = (app as DemoApp).repository
+    val demoApp = app as DemoApp
+    val repository = demoApp.repository
     var serviceStateJob: Job? = null
+    var scanJob: Job? = null
+
+    private val _state = MutableStateFlow(HomeState())
+    val state = _state.asStateFlow()
+
 
     init {
         //check if ring device is already a companion device
         if(companionDeviceManager.myAssociations.isNotEmpty()) {
             val associatedDevice = companionDeviceManager.myAssociations[0]
-            val ringDevice = SmartRingDevice(associatedDevice.displayName.toString(), associatedDevice.deviceMacAddress.toString())
+            val ringDevice = SmartRingDevice(associatedDevice.displayName.toString(), associatedDevice.deviceMacAddress.toString().uppercase())
             updateRingDevice(ringDevice)
             updateScanState(HomeState.ScanState.SCAN_STATE_FOUND)
         }
@@ -58,22 +65,15 @@ class HomeViewModel(val app: Application): AndroidViewModel(application = app) {
         }
 
     }
-    val _state = MutableStateFlow(HomeState())
-    val state = _state.asStateFlow()
 
-    private val callback = DemoScanCallback(this::updateRingDevice, this::updateScanState, this::stopScanWork)
+
+    private val callback = DemoScanCallback(this::updateRingDevice, this::updateScanState, this::cancelScanJob)
 
 
     //state functions
     private fun updateRingDevice(ringDevice: SmartRingDevice) {
         _state.update { currentState ->
             currentState.copy(newDevice = ringDevice)
-        }
-    }
-
-    private fun updateConnectionStatus(isConnected: Boolean) {
-        _state.update { currentState ->
-            currentState.copy(isConnected = isConnected)
         }
     }
 
@@ -92,10 +92,10 @@ class HomeViewModel(val app: Application): AndroidViewModel(application = app) {
 
     @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_SCAN)
     fun startScanning() {
-        viewModelScope.launch  {
+       scanJob = viewModelScope.launch  {
             doScanWork()
             delay(5000.milliseconds)
-            stopScanWork()
+            scanJobTimeout()
         }
     }
 
@@ -116,27 +116,44 @@ class HomeViewModel(val app: Application): AndroidViewModel(application = app) {
     }
 
 
+    private fun cancelScanJob() {
+        scanJob?.cancel()
+    }
+
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
-    private fun stopScanWork() {
-        bluetoothScanner.stopScan(callback)
-        updateScanState(HomeState.ScanState.SCAN_STATE_IDLE)
+    private fun scanJobTimeout() {
+            if(scanJob?.isActive == true) {
+                bluetoothScanner.stopScan(callback)
+                updateScanState(HomeState.ScanState.SCAN_STATE_IDLE)
+                Toast.makeText(app,"No device found. Please scan again", Toast.LENGTH_SHORT).show()
+            }
+
+
+
+    }
+
+
+    fun disconnectDevice() {
+        repository.disconnectFromService()
     }
 
 
     fun startConnection(ringDevice: SmartRingDevice) {
-        addAssociation(ringDevice)
-        //TODO(do BLE connection here)
+        val association = companionDeviceManager.myAssociations.firstOrNull{ association ->
+            association.deviceMacAddress.toString() == ringDevice.address
+        }
+
+        if(association == null) {
+            addAssociation(ringDevice)
+        } else {
+            repository.connectToService(ringDevice.address)
+        }
+
     }
 
 
 
     private fun addAssociation(ringDevice: SmartRingDevice) {
-        val association = companionDeviceManager.myAssociations.firstOrNull{ association ->
-            association.deviceMacAddress.toString() == ringDevice.address
-        }
-
-        if(association != null) return
-        else {
 
             val executor = Executor {it.run()}
 
@@ -156,24 +173,26 @@ class HomeViewModel(val app: Application): AndroidViewModel(application = app) {
 
             val callback = object: CompanionDeviceManager.Callback() {
                 override fun onFailure(p0: CharSequence?) {
-                    Log.d("ERROR", p0.toString())
+                    Log.d("CONNECT", p0.toString())
                 }
 
                 override fun onAssociationPending(intentSender: IntentSender) {
                     super.onAssociationPending(intentSender)
                     //line of code that displays popup on screen
+                    Log.d("CONNECT", "onAssociationPending()")
                     app.startIntentSender(intentSender, null, Intent.FLAG_ACTIVITY_NEW_TASK, Intent.FLAG_ACTIVITY_NEW_TASK, 0)
                 }
 
                 override fun onAssociationCreated(associationInfo: AssociationInfo) {
                     super.onAssociationCreated(associationInfo)
+                    repository.connectToService(ringDevice.address)
                     Toast.makeText(app,"Device correctly associated", Toast.LENGTH_SHORT).show()
                 }
 
             }
 
             companionDeviceManager.associate(request, executor, callback)
-        }
+
     }
 
 }

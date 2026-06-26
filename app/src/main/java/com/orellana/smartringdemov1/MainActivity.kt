@@ -9,9 +9,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -67,7 +67,13 @@ fun MainContainer() {
                 )
             }
         },
-        bottomBar = { DemoBottomBar(currentRoute) { destination -> navController.navigate(destination) } },
+        bottomBar = {
+            DemoBottomBar(currentRoute) { destination ->
+                navController.navigate(
+                    destination
+                )
+            }
+        },
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
     ) { innerPadding ->
         NavHost(
@@ -77,10 +83,13 @@ fun MainContainer() {
         ) {
             composable(route = ScreenDestinations.Home.name) {
                 val viewModel: HomeViewModel = viewModel()
+                val homeState = viewModel.state.collectAsStateWithLifecycle().value
                 HomeScreen(
                     startScanning = viewModel::startScanning,
                     snackBarHostState = snackBarHostState,
-                    homeState = viewModel.state.collectAsState().value
+                    homeState = homeState,
+                    onConnectDevice = { viewModel.startConnection(it) },
+                    onDisconnectDevice = { viewModel.disconnectDevice() }
                 )
             }
 

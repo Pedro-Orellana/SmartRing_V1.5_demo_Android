@@ -56,4 +56,7 @@ dependencies {
 
     // Jetpack navigation integration
     implementation(libs.androidx.navigation.compose)
+
+    //dependency to use collectAsStateWithLifeCycle()
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }

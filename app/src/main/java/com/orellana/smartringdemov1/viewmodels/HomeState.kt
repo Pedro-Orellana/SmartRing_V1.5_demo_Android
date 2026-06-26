@@ -5,7 +5,6 @@ import com.orellana.smartringdemov1.bluetooth.SmartRingDevice
 
 data class HomeState(
     val newDevice: SmartRingDevice? = null,
-    val isConnected: Boolean = false,
     val scanState: ScanState = ScanState.SCAN_STATE_IDLE,
     val serviceState: ServiceState = ServiceState()
     ) {

@@ -37,8 +37,9 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     snackBarHostState: SnackbarHostState,
     homeState: HomeState,
+    onConnectDevice: (SmartRingDevice) -> Unit,
+    onDisconnectDevice: () -> Unit,
     startScanning: () -> Unit,
-
     ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -132,7 +133,12 @@ fun HomeScreen(
 
                     HomeState.ScanState.SCAN_STATE_FOUND -> {
                         homeState.newDevice?.let {
-                            FoundDeviceCard(it, homeState.isConnected)
+                            FoundDeviceCard(
+                                ringDevice = it,
+                                isConnected = homeState.serviceState.isConnected,
+                                onConnectDevice = onConnectDevice,
+                                onDisconnectDevice = onDisconnectDevice
+                            )
                         }
                     }
                 }
@@ -150,7 +156,12 @@ fun HomeScreen(
 @Composable
 fun HomeScreenPreview() {
     val snackBarState = remember { SnackbarHostState() }
-    val ringDevice = SmartRingDevice(name = "Demo device", "AA:BB:CC:DD:EE:FF", false)
+    val ringDevice = SmartRingDevice(name = "Demo device", "AA:BB:CC:DD:EE:FF")
     val homeState = HomeState(scanState = HomeState.ScanState.SCAN_STATE_FOUND, newDevice = ringDevice)
-    HomeScreen(snackBarState, homeState) {}
+    HomeScreen(
+        snackBarHostState = snackBarState,
+        homeState = homeState,
+        onConnectDevice = {},
+        onDisconnectDevice = {}
+    ) {}
 }

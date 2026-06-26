@@ -27,7 +27,12 @@ import androidx.compose.ui.unit.dp
 import com.orellana.smartringdemov1.bluetooth.SmartRingDevice
 
 @Composable
-fun FoundDeviceCard(ringDevice: SmartRingDevice, isConnected: Boolean) {
+fun FoundDeviceCard(
+    ringDevice: SmartRingDevice,
+    isConnected: Boolean,
+    onConnectDevice: (SmartRingDevice) -> Unit,
+    onDisconnectDevice: () -> Unit
+) {
     Card(
         elevation = CardDefaults.cardElevation(12.dp),
         modifier = Modifier
@@ -104,7 +109,13 @@ fun FoundDeviceCard(ringDevice: SmartRingDevice, isConnected: Boolean) {
 
 
             OutlinedButton(
-                onClick = {},
+                onClick = {
+                    if (isConnected) {
+                        onDisconnectDevice()
+                    } else {
+                        onConnectDevice(ringDevice)
+                    }
+                },
                 modifier = Modifier
                     .padding(vertical = 12.dp)
             ) {
@@ -126,5 +137,5 @@ fun FoundDeviceCardPreview() {
         name = "Demo device",
         address = "AA:BB:CC:DD:EE:FF"
     )
-    FoundDeviceCard(ringDevice, false)
+    FoundDeviceCard(ringDevice, false, {}) {}
 }
