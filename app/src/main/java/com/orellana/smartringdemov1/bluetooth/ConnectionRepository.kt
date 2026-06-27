@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.util.Log
 import com.orellana.smartringdemov1.MAC_ADDRESS_INTENT_EXTRA
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +62,9 @@ class ConnectionRepository(val context: Context) {
 
 
     fun connectToService(macAddress: String) {
+
+        Log.d("CONNECT", "Call connectToService() on ConnectionRepository")
+
         if (!serviceIntent.hasExtra(MAC_ADDRESS_INTENT_EXTRA)) {
             serviceIntent.putExtra(MAC_ADDRESS_INTENT_EXTRA, macAddress)
         }

@@ -135,7 +135,7 @@ fun HomeScreen(
                         homeState.newDevice?.let {
                             FoundDeviceCard(
                                 ringDevice = it,
-                                isConnected = homeState.serviceState.isConnected,
+                                connectionState = homeState.serviceState.connectionState,
                                 onConnectDevice = onConnectDevice,
                                 onDisconnectDevice = onDisconnectDevice
                             )

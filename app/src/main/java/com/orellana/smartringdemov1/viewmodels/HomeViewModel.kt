@@ -140,7 +140,7 @@ class HomeViewModel(val app: Application): AndroidViewModel(application = app) {
 
     fun startConnection(ringDevice: SmartRingDevice) {
         val association = companionDeviceManager.myAssociations.firstOrNull{ association ->
-            association.deviceMacAddress.toString() == ringDevice.address
+            association.deviceMacAddress.toString().uppercase() == ringDevice.address
         }
 
         if(association == null) {

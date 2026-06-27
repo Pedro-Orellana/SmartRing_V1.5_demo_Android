@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.orellana.smartringdemov1.MAC_ADDRESS_INTENT_EXTRA
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,9 +33,9 @@ class DemoConnectionService : Service() {
 
 
     //state functions
-    private fun updateIsConnected(isConnected: Boolean) {
+    private fun updateIsConnected(connectionState: ServiceState.ConnectionState) {
         _state.update { current ->
-            current.copy(isConnected = isConnected)
+            current.copy(connectionState = connectionState)
         }
     }
 
@@ -63,6 +64,9 @@ class DemoConnectionService : Service() {
                 callback
             )
             val demoBinder = DemoConnectionBinder()
+
+            Log.d("CONNECT", "call onBind() on DecomConnectionService()")
+            Log.d("CONNECT", "demoBinder: $demoBinder")
             return demoBinder
         }
         return null
@@ -91,5 +95,11 @@ class DemoConnectionService : Service() {
 
 
 data class ServiceState(
-    val isConnected: Boolean = false
-)
+    val connectionState: ConnectionState = ConnectionState.CONNECTION_STATE_DISCONNECTED
+) {
+    enum class ConnectionState {
+        CONNECTION_STATE_DISCONNECTED,
+        CONNECTION_STATE_CONNECTING,
+        CONNECTION_STATE_CONNECTED
+    }
+}

@@ -3,12 +3,13 @@ package com.orellana.smartringdemov1.bluetooth
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothProfile
+import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 class DemoGattCallback(
-   val updateIsConnected: (Boolean) -> Unit,
-   val updateGatt:(BluetoothGatt?) -> Unit
+    val updateIsConnected: (ServiceState.ConnectionState) -> Unit,
+    val updateGatt:(BluetoothGatt?) -> Unit
 ): BluetoothGattCallback() {
 
     @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
@@ -16,14 +17,21 @@ class DemoGattCallback(
         super.onConnectionStateChange(gatt, status, newState)
         if(status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
             //successfully connected to the ring
+            Log.d("CONNECT", "Ring is connected")
                 updateGatt(gatt)
-                updateIsConnected(true)
+                updateIsConnected(ServiceState.ConnectionState.CONNECTION_STATE_CONNECTED)
                 gatt?.discoverServices()
         }
 
         if(newState == BluetoothProfile.STATE_DISCONNECTED) {
+            Log.d("CONNECT", "Ring is not connected")
             updateGatt(null)
-           updateIsConnected(false)
+           updateIsConnected(ServiceState.ConnectionState.CONNECTION_STATE_DISCONNECTED)
+        }
+
+        if(newState == BluetoothProfile.STATE_CONNECTING) {
+            Log.d("CONNECT", "Trying to connect to ring...")
+            updateIsConnected(ServiceState.ConnectionState.CONNECTION_STATE_CONNECTING)
         }
     }
 }
