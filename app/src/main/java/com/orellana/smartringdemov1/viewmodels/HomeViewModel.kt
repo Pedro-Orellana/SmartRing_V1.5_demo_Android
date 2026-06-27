@@ -51,7 +51,7 @@ class HomeViewModel(val app: Application): AndroidViewModel(application = app) {
         //check if ring device is already a companion device
         if(companionDeviceManager.myAssociations.isNotEmpty()) {
             val associatedDevice = companionDeviceManager.myAssociations[0]
-            val ringDevice = SmartRingDevice(associatedDevice.displayName.toString(), associatedDevice.deviceMacAddress.toString().uppercase())
+            val ringDevice = SmartRingDevice.getSmartRingFromAssociation(associatedDevice)
             updateRingDevice(ringDevice)
             updateScanState(HomeState.ScanState.SCAN_STATE_FOUND)
         }

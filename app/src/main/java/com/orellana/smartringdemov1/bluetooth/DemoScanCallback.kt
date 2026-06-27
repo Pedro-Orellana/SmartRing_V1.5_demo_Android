@@ -15,9 +15,7 @@ class DemoScanCallback(
     override fun onScanResult(callbackType: Int, result: ScanResult?) {
         super.onScanResult(callbackType, result)
         result?.let {
-            val name = it.device.name
-            val address = it.device.address
-            val ring = SmartRingDevice(name, address)
+            val ring = SmartRingDevice.getSmartRingFromBluetoothDevice(it.device)
             updateRingDevice(ring)
             updateScanState(HomeState.ScanState.SCAN_STATE_FOUND)
             cancelScanJob()
