@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -39,13 +40,15 @@ class DemoConnectionService : Service() {
 
     //connection gatt
     private var gatt: BluetoothGatt? = null
+    private var rxCharacteristic: BluetoothGattCharacteristic? = null
 
     //bluetooth connection job
     private var connectionJob: Job? = null
 
-    fun updateGatt(gatt: BluetoothGatt?) {
+    fun updateAndCancelJob(gatt: BluetoothGatt?, rxCharacteristic: BluetoothGattCharacteristic?) {
         connectionJob?.cancel()
         this.gatt = gatt
+        this.rxCharacteristic = rxCharacteristic
     }
 
     //state
@@ -64,7 +67,7 @@ class DemoConnectionService : Service() {
     //custom gatt callback
     val callback = DemoGattCallback(
         updateIsConnected = this::updateIsConnected,
-        updateGatt = this::updateGatt,
+        updateAndCancelJob = this::updateAndCancelJob,
         startForeground = this::onServiceStartForeground
     )
 
@@ -162,6 +165,18 @@ class DemoConnectionService : Service() {
         connectionJob?.cancel()
         Toast.makeText(this, "Could not connect to ring. Please try again", Toast.LENGTH_SHORT)
             .show()
+    }
+
+
+
+    //LED methods
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    fun sendLedData(data: Char) {
+        if(gatt != null && rxCharacteristic != null) {
+            val byteArray = byteArrayOf(data.code.toByte())
+            gatt!!.writeCharacteristic(rxCharacteristic!!, byteArray, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE)
+        }
     }
 
 

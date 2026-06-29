@@ -85,4 +85,13 @@ class ConnectionRepository(val context: Context) {
             service = null
         }
     }
+
+
+
+    //LED methods
+    fun sendLedData(data: Char) {
+        if(context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            service?.sendLedData(data)
+        }
+    }
 }

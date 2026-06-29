@@ -25,6 +25,7 @@ import com.orellana.smartringdemov1.screens.ScreenDestinations
 import com.orellana.smartringdemov1.screens.SensorTestScreen
 import com.orellana.smartringdemov1.ui.theme.SmartRingDemoV1Theme
 import com.orellana.smartringdemov1.viewmodels.HomeViewModel
+import com.orellana.smartringdemov1.viewmodels.LedViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,13 +89,18 @@ fun MainContainer() {
                     startScanning = viewModel::startScanning,
                     snackBarHostState = snackBarHostState,
                     homeState = homeState,
-                    onConnectDevice =  { viewModel.startConnection(it) },
+                    onConnectDevice = { viewModel.startConnection(it) },
                     onDisconnectDevice = { viewModel.disconnectDevice() }
                 )
             }
 
             composable(route = ScreenDestinations.Led.name) {
-                LedTestScreen()
+                val viewModel: LedViewModel = viewModel()
+                val ledScreenState = viewModel.state.collectAsStateWithLifecycle().value
+                LedTestScreen(
+                    connectionState = ledScreenState.serviceState.connectionState,
+                    onSendData = viewModel::onSendData
+                ) { navController.popBackStack(ScreenDestinations.Home.name, false) }
             }
 
             composable(route = ScreenDestinations.Sensor.name) {
