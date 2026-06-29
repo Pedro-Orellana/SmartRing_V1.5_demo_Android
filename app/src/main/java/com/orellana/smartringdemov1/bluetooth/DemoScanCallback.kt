@@ -3,7 +3,6 @@ package com.orellana.smartringdemov1.bluetooth
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import com.orellana.smartringdemov1.viewmodels.HomeState
-import kotlinx.coroutines.Job
 
 class DemoScanCallback(
     val updateRingDevice: (SmartRingDevice) -> Unit,

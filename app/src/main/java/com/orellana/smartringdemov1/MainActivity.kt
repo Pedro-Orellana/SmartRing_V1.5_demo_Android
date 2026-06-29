@@ -88,7 +88,7 @@ fun MainContainer() {
                     startScanning = viewModel::startScanning,
                     snackBarHostState = snackBarHostState,
                     homeState = homeState,
-                    onConnectDevice = { viewModel.startConnection(it) },
+                    onConnectDevice =  { viewModel.startConnection(it) },
                     onDisconnectDevice = { viewModel.disconnectDevice() }
                 )
             }

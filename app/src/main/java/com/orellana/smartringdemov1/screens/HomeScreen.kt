@@ -40,7 +40,7 @@ fun HomeScreen(
     onConnectDevice: (SmartRingDevice) -> Unit,
     onDisconnectDevice: () -> Unit,
     startScanning: () -> Unit,
-    ) {
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -62,17 +62,45 @@ fun HomeScreen(
                 )
 
                 when (snackBarResult) {
-                    SnackbarResult.ActionPerformed -> {/*go to settings*/
-                    }
+                    SnackbarResult.ActionPerformed -> {/*go to settings*/ }
 
                     SnackbarResult.Dismissed -> {}
                 }
             }
-
         }
     }
 
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if(isGranted) {
+            homeState.newDevice?.let {
+                onConnectDevice(it)
+            }
+        } else {
+            scope.launch {
+                val snackBarResult = snackBarHostState.showSnackbar(
+                    message = "Necessary permissions not granted",
+                    actionLabel = "Go to Settings",
+                    duration = SnackbarDuration.Short
+                )
+
+                when (snackBarResult) {
+                    SnackbarResult.ActionPerformed -> {/*go to settings*/ }
+
+                    SnackbarResult.Dismissed -> {}
+                }
+            }
+        }
+    }
+
+    //function to connect to ring, determining if post notifications are enable first
+    fun managedDeviceConnection(smartRing: SmartRingDevice) {
+        if(context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            onConnectDevice(smartRing)
+        }
+    }
 
     Column(
         horizontalAlignment = Alignment.Start,
@@ -136,7 +164,7 @@ fun HomeScreen(
                             FoundDeviceCard(
                                 ringDevice = it,
                                 connectionState = homeState.serviceState.connectionState,
-                                onConnectDevice = onConnectDevice,
+                                onConnectDevice = ::managedDeviceConnection,
                                 onDisconnectDevice = onDisconnectDevice
                             )
                         }
@@ -157,7 +185,8 @@ fun HomeScreen(
 fun HomeScreenPreview() {
     val snackBarState = remember { SnackbarHostState() }
     val ringDevice = SmartRingDevice(name = "Demo device", "AA:BB:CC:DD:EE:FF")
-    val homeState = HomeState(scanState = HomeState.ScanState.SCAN_STATE_FOUND, newDevice = ringDevice)
+    val homeState =
+        HomeState(scanState = HomeState.ScanState.SCAN_STATE_FOUND, newDevice = ringDevice)
     HomeScreen(
         snackBarHostState = snackBarState,
         homeState = homeState,

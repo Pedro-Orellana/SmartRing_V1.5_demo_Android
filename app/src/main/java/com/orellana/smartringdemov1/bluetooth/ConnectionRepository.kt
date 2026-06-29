@@ -7,7 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.IBinder
-import android.util.Log
+import androidx.annotation.RequiresPermission
 import com.orellana.smartringdemov1.MAC_ADDRESS_INTENT_EXTRA
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,15 +61,20 @@ class ConnectionRepository(val context: Context) {
     }
 
 
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun connectToService(macAddress: String) {
 
-        Log.d("CONNECT", "Call connectToService() on ConnectionRepository")
+        if (service == null) {
+            if (!serviceIntent.hasExtra(MAC_ADDRESS_INTENT_EXTRA)) {
+                serviceIntent.putExtra(MAC_ADDRESS_INTENT_EXTRA, macAddress)
+            }
 
-        if (!serviceIntent.hasExtra(MAC_ADDRESS_INTENT_EXTRA)) {
-            serviceIntent.putExtra(MAC_ADDRESS_INTENT_EXTRA, macAddress)
+            context.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
+
+        } else {
+            service?.connectRing(macAddress)
         }
 
-        context.bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
 
@@ -77,6 +82,7 @@ class ConnectionRepository(val context: Context) {
         if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
             service?.disconnectRing()
             context.unbindService(serviceConnection)
+            service = null
         }
     }
 }
