@@ -26,6 +26,7 @@ import com.orellana.smartringdemov1.screens.SensorTestScreen
 import com.orellana.smartringdemov1.ui.theme.SmartRingDemoV1Theme
 import com.orellana.smartringdemov1.viewmodels.HomeViewModel
 import com.orellana.smartringdemov1.viewmodels.LedViewModel
+import com.orellana.smartringdemov1.viewmodels.SensorViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -104,7 +105,11 @@ fun MainContainer() {
             }
 
             composable(route = ScreenDestinations.Sensor.name) {
-                SensorTestScreen()
+                val viewModel: SensorViewModel = viewModel()
+                val state = viewModel.state.collectAsStateWithLifecycle().value
+                SensorTestScreen(
+                    connectionState = state.serviceState.connectionState
+                ) { navController.popBackStack(ScreenDestinations.Home.name, false) }
             }
         }
 
