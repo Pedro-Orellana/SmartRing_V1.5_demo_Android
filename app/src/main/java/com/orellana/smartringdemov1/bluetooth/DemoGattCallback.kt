@@ -9,11 +9,14 @@ import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.UUID
 
 class DemoGattCallback(
     val updateIsConnected: (ServiceState.ConnectionState) -> Unit,
     val updateAndCancelJob: (BluetoothGatt?, BluetoothGattCharacteristic?) -> Unit,
+    val updateSensorData: (Float, Float, Float, Float, Float, Float) -> Unit,
     val startForeground: () -> Unit
 ) : BluetoothGattCallback() {
 
@@ -73,6 +76,28 @@ class DemoGattCallback(
                 startForeground()
             }
         }
+    }
+
+    override fun onCharacteristicChanged(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic,
+        value: ByteArray
+    ) {
+        super.onCharacteristicChanged(gatt, characteristic, value)
+        //this is where data is obtained
+        val buffer = ByteBuffer.wrap(value)
+            .order(ByteOrder.LITTLE_ENDIAN)
+
+        //get data
+        val yaw = (buffer.getShort() / 16.0f)
+        val roll = (buffer.getShort() / 16.0f)
+        val pitch = (buffer.getShort() / 16.0f)
+        val xAccel = (buffer.getShort() / 100.0f)
+        val yAccel = (buffer.getShort() / 100.0f)
+        val zAccel = (buffer.getShort() / 100.0f)
+
+        updateSensorData(xAccel, yAccel, zAccel, yaw, pitch, roll)
+        //Log.d("DATA", "heading: $yaw, roll: $roll, pitch: $pitch, X: $xAccel, Y: $yAccel, Z: $zAccel")
     }
 
 

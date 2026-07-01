@@ -63,11 +63,32 @@ class DemoConnectionService : Service() {
         }
     }
 
+    private fun updateSensorData(
+        newXAccel: Float,
+        newYAccel: Float,
+        newZAccel: Float,
+        newYaw: Float,
+        newPitch: Float,
+        newRoll: Float,
+    ) {
+        _state.update { currentState ->
+            currentState.copy(
+                xAccel = newXAccel,
+                yAccel = newYAccel,
+                zAccel = newZAccel,
+                yaw = newYaw,
+                pitch = newPitch,
+                roll = newRoll
+            )
+        }
+    }
+
 
     //custom gatt callback
     val callback = DemoGattCallback(
         updateIsConnected = this::updateIsConnected,
         updateAndCancelJob = this::updateAndCancelJob,
+        updateSensorData = this::updateSensorData,
         startForeground = this::onServiceStartForeground
     )
 
@@ -193,7 +214,13 @@ class DemoConnectionService : Service() {
 
 //service state
 data class ServiceState(
-    val connectionState: ConnectionState = ConnectionState.CONNECTION_STATE_DISCONNECTED
+    val connectionState: ConnectionState = ConnectionState.CONNECTION_STATE_DISCONNECTED,
+    val xAccel: Float = 0f,
+    val yAccel: Float = 0f,
+    val zAccel: Float = 0f,
+    val yaw: Float = 0f,
+    val pitch: Float = 0f,
+    val roll: Float = 0f
 ) {
     enum class ConnectionState {
         CONNECTION_STATE_DISCONNECTED,

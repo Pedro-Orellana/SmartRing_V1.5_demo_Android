@@ -108,7 +108,7 @@ fun MainContainer() {
                 val viewModel: SensorViewModel = viewModel()
                 val state = viewModel.state.collectAsStateWithLifecycle().value
                 SensorTestScreen(
-                    connectionState = state.serviceState.connectionState
+                    serviceState = state.serviceState
                 ) { navController.popBackStack(ScreenDestinations.Home.name, false) }
             }
         }

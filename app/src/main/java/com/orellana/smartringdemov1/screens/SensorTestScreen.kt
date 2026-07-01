@@ -11,13 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import com.orellana.smartringdemov1.bluetooth.ServiceState
 import com.orellana.smartringdemov1.bluetooth.ServiceState.ConnectionState
 import com.orellana.smartringdemov1.components.DeviceNotConnectedCard
 import com.orellana.smartringdemov1.components.SensorTestComponent
 
 @Composable
 fun SensorTestScreen(
-    connectionState: ConnectionState,
+    serviceState: ServiceState,
     navigateBackHome: () -> Unit
 ) {
     Column(
@@ -38,6 +39,7 @@ fun SensorTestScreen(
             fontWeight = FontWeight.Light
         )
 
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -45,11 +47,20 @@ fun SensorTestScreen(
         ) {
 
             AnimatedContent(
-                targetState = connectionState
+                targetState = serviceState.connectionState
             ) { newConnectionState ->
 
                 when(newConnectionState) {
-                    ConnectionState.CONNECTION_STATE_CONNECTED -> SensorTestComponent()
+                    ConnectionState.CONNECTION_STATE_CONNECTED -> {
+                        SensorTestComponent(
+                            xAccel = serviceState.xAccel,
+                            yAccel = serviceState.yAccel,
+                            zAccel = serviceState.zAccel,
+                            yaw = serviceState.yaw,
+                            pitch = serviceState.pitch,
+                            roll = serviceState.roll
+                        )
+                    }
                     else -> DeviceNotConnectedCard { navigateBackHome() }
                 }
             }
@@ -62,6 +73,6 @@ fun SensorTestScreen(
 @Preview(showBackground = true)
 @Composable
 fun SensorTestScreenPreview() {
-    val connectionState = ConnectionState.CONNECTION_STATE_DISCONNECTED
-    SensorTestScreen(connectionState){}
+    val serviceState = ServiceState()
+    SensorTestScreen(serviceState){}
 }
