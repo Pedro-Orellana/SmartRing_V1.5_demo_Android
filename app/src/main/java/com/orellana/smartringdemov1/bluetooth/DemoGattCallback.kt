@@ -7,16 +7,16 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothGattService
 import android.bluetooth.BluetoothProfile
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.Locale
 import java.util.UUID
 
 class DemoGattCallback(
     val updateIsConnected: (ServiceState.ConnectionState) -> Unit,
     val updateAndCancelJob: (BluetoothGatt?, BluetoothGattCharacteristic?) -> Unit,
-    val updateSensorData: (Float, Float, Float, Float, Float, Float) -> Unit,
+    val updateSensorData: (String, String, String, String, String, String) -> Unit,
     val startForeground: () -> Unit
 ) : BluetoothGattCallback() {
 
@@ -70,7 +70,6 @@ class DemoGattCallback(
         descriptor?.let {
             if(it.uuid.equals(cccDescriptorUUID) && (status == BluetoothGatt.GATT_SUCCESS)) {
                 //notifications are enabled, update UI
-                Log.d("DATA", "notifications are enabled")
                 updateAndCancelJob(gatt, rxCharacteristic)
                 updateIsConnected(ServiceState.ConnectionState.CONNECTION_STATE_CONNECTED)
                 startForeground()
@@ -89,17 +88,24 @@ class DemoGattCallback(
             .order(ByteOrder.LITTLE_ENDIAN)
 
         //get data
-        val yaw = (buffer.getShort() / 16.0f)
-        val roll = (buffer.getShort() / 16.0f)
-        val pitch = (buffer.getShort() / 16.0f)
-        val xAccel = (buffer.getShort() / 100.0f)
-        val yAccel = (buffer.getShort() / 100.0f)
-        val zAccel = (buffer.getShort() / 100.0f)
+        val yaw = getStringDataFromShort(buffer.getShort(), true)
+        val roll = getStringDataFromShort(buffer.getShort(), true)
+        val pitch = getStringDataFromShort(buffer.getShort(), true)
+        val xAccel = getStringDataFromShort(buffer.getShort(), false)
+        val yAccel = getStringDataFromShort(buffer.getShort(), false)
+        val zAccel = getStringDataFromShort(buffer.getShort(), false)
+
+
 
         updateSensorData(xAccel, yAccel, zAccel, yaw, pitch, roll)
-        //Log.d("DATA", "heading: $yaw, roll: $roll, pitch: $pitch, X: $xAccel, Y: $yAccel, Z: $zAccel")
     }
 
+
+
+    private fun getStringDataFromShort(data: Short, isAngleData: Boolean) : String {
+        val divisor = if(isAngleData) 16.0f else 100.0f
+        return String.format(Locale.ENGLISH, "%.2f", (data / divisor))
+    }
 
 
 

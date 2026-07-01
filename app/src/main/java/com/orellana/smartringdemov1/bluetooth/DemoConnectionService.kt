@@ -64,12 +64,12 @@ class DemoConnectionService : Service() {
     }
 
     private fun updateSensorData(
-        newXAccel: Float,
-        newYAccel: Float,
-        newZAccel: Float,
-        newYaw: Float,
-        newPitch: Float,
-        newRoll: Float,
+        newXAccel: String,
+        newYAccel: String,
+        newZAccel: String,
+        newYaw: String,
+        newPitch: String,
+        newRoll: String,
     ) {
         _state.update { currentState ->
             currentState.copy(
@@ -215,12 +215,12 @@ class DemoConnectionService : Service() {
 //service state
 data class ServiceState(
     val connectionState: ConnectionState = ConnectionState.CONNECTION_STATE_DISCONNECTED,
-    val xAccel: Float = 0f,
-    val yAccel: Float = 0f,
-    val zAccel: Float = 0f,
-    val yaw: Float = 0f,
-    val pitch: Float = 0f,
-    val roll: Float = 0f
+    val xAccel: String = "0.00",
+    val yAccel: String = "0.00",
+    val zAccel: String = "0.00",
+    val yaw: String = "0.00",
+    val pitch: String = "0.00",
+    val roll: String = "0.00"
 ) {
     enum class ConnectionState {
         CONNECTION_STATE_DISCONNECTED,

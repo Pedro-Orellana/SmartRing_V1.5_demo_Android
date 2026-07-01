@@ -22,12 +22,12 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SensorTestComponent(
-    xAccel: Float,
-    yAccel: Float,
-    zAccel: Float,
-    yaw: Float,
-    pitch: Float,
-    roll: Float
+    xAccel: String,
+    yAccel: String,
+    zAccel: String,
+    yaw: String,
+    pitch: String,
+    roll: String
 ) {
     Card(
         elevation = CardDefaults.cardElevation(12.dp),
@@ -184,5 +184,5 @@ fun SensorTestComponent(
 @Composable
 fun SensorTestComponentPreview() {
 
-    SensorTestComponent(2.0f, 3.3f, 4.4f, 120f, 45f, 270f)
+    SensorTestComponent("0.00", "0.00","0.00","0.00","0.00","0.00" )
 }
